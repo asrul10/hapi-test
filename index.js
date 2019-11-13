@@ -36,7 +36,7 @@ const migrateDb = async() => {
     // console.log('Count product ', count.rows);
 }
 
-const deleteProduct = async() => {
+const clearProducts = async() => {
     await connection.query(`DELETE FROM product`);
     console.log('Delete Product');
 }
@@ -54,6 +54,20 @@ const getProducts = async() => {
     const connect = await connection.connect();
     const select = await connect.query(`SELECT * FROM product`);
     console.log('Get Products');
+    return select.rows;
+}
+
+const getProduct = async(id) => {
+    const connect = await connection.connect();
+    const select = await connect.query(`SELECT * FROM product WHERE id = $1`, [id]);
+    console.log('Get Product');
+    return select.rows;
+}
+
+const deleteProduct = async(id) => {
+    const connect = await connection.connect();
+    const select = await connect.query(`DELETE FROM product WHERE id = $1`, [id]);
+    console.log('Delete Product');
     return select.rows;
 }
 
@@ -131,9 +145,30 @@ const init = async() => {
 
     server.route({
         method: 'GET',
+        path: '/product/{id}',
+        handler: async(request, h) => {
+            const product = await getProduct(request.params.id);
+            return product;
+        }
+    });
+
+    server.route({
+        method: 'GET',
+        path: '/delete-product/{id}',
+        handler: async(request, h) => {
+            const product = await deleteProduct(request.params.id);
+            return {
+                status: true,
+                message: `Product id: ${request.params.id} berhasil dihapus!`
+            };
+        }
+    });
+
+    server.route({
+        method: 'GET',
         path: '/clear-products',
         handler: async(request, h) => {
-            await deleteProduct();
+            await clearProducts();
             return 'Products Cleared!';
         }
     });
