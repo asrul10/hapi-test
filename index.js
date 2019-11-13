@@ -26,14 +26,6 @@ const migrateDb = async() => {
         price decimal(11,2)
     )`);
     console.log('Create table product');
-    // const update = await connection.query(`UPDATE product SET nama=$1 WHERE id=$2`, ['Baju Putih', 1]);
-    // console.log('Update product ', update.rows);
-
-    // const del = await connection.query(`DELETE FROM product WHERE id=$1`, [1]);
-    // console.log('Delete product ', del.rows);
-
-    // const count = await connection.query(`SELECT COUNT(*) FROM product`);
-    // console.log('Count product ', count.rows);
 }
 
 const clearProducts = async() => {
@@ -43,32 +35,45 @@ const clearProducts = async() => {
 
 const saveProduct = (product) => {
     connection.query(`INSERT INTO product 
-        (nama, qty, images, description, price)
+        (id, nama, qty, images, description, price)
         VALUES
-        ($1, $2, $3, $4, $5)
-    `, [product.name, product.stock, JSON.stringify(product.images), product.desc, product.price]);
+        ($1, $2, $3, $4, $5, $6)
+    `, [product.no, product.name, product.stock, JSON.stringify(product.images), product.desc, product.price]);
     console.log('Save Product: ' + product.name);
 }
 
 const getProducts = async() => {
-    const connect = await connection.connect();
-    const select = await connect.query(`SELECT * FROM product`);
+    const result = await connection.query(`SELECT * FROM product`);
     console.log('Get Products');
-    return select.rows;
+    return result.rows;
 }
 
 const getProduct = async(id) => {
-    const connect = await connection.connect();
-    const select = await connect.query(`SELECT * FROM product WHERE id = $1`, [id]);
+    const result = await connection.query(`SELECT * FROM product WHERE id = $1`, [id]);
     console.log('Get Product');
-    return select.rows;
+    return result.rows;
+}
+
+const updateProduct = async(id, data) => {
+    try {
+        const result = await connection.query(`UPDATE product SET nama=$2, qty=$3, description=$4, price=$5 WHERE id=$1`, [
+            id,
+            data.nama,
+            data.qty,
+            data.description,
+            data.price
+        ]);
+        console.log('Update Product');
+        return result.rows;
+    } catch (error) {
+        console.log(error);
+    }
 }
 
 const deleteProduct = async(id) => {
-    const connect = await connection.connect();
-    const select = await connect.query(`DELETE FROM product WHERE id = $1`, [id]);
+    const result = await connection.query(`DELETE FROM product WHERE id = $1`, [id]);
     console.log('Delete Product');
-    return select.rows;
+    return result.rows;
 }
 
 const getList = async(page) => {
@@ -153,6 +158,25 @@ const init = async() => {
     });
 
     server.route({
+        method: 'POST',
+        path: '/product/{id}',
+        handler: async(request, h) => {
+            const payload = request.payload;
+            const data = {
+                nama: payload.nama,
+                qty: parseInt(payload.qty),
+                description: payload.description,
+                price: parseFloat(payload.price)
+            }
+            if (data.nama && data.qty && data.description && data.price) {
+                const product = await updateProduct(request.params.id, data);
+                return [data];
+            }
+            return { status: false, message: 'Input tidak valid' };
+        }
+    });
+
+    server.route({
         method: 'GET',
         path: '/delete-product/{id}',
         handler: async(request, h) => {
@@ -165,11 +189,38 @@ const init = async() => {
     });
 
     server.route({
+        method: 'POST',
+        path: '/update-product/{id}',
+        handler: async(request, h) => {
+            await deleteProduct(request.params.id);
+            return {
+                status: true,
+                message: `Product id: ${request.params.id} berhasil dihapus!`
+            };
+        }
+    });
+
+    server.route({
+        method: 'GET',
+        path: '/collecting-products/{page}',
+        handler: async(request, h) => {
+            await getList(request.params.page);
+            return {
+                status: true,
+                message: 'Products Collected!'
+            };
+        }
+    });
+
+    server.route({
         method: 'GET',
         path: '/clear-products',
         handler: async(request, h) => {
             await clearProducts();
-            return 'Products Cleared!';
+            return {
+                status: true,
+                message: 'Products Cleared!'
+            };
         }
     });
 
