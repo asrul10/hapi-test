@@ -16,48 +16,45 @@ const openapikey = '721407f393e84a28593374cc2b347a98';
 const options = { headers: { 'openapikey': openapikey } };
 const hostApi = 'https://api.elevenia.co.id';
 
-const connectDb = async() => {
+const migrateDb = async() => {
+    await connection.query(`CREATE TABLE IF NOT EXISTS product (
+        id serial PRIMARY KEY, 
+        nama VARCHAR(100) NOT NULL,
+        qty INTEGER,
+        images TEXT,
+        description TEXT,
+        price decimal(11,2)
+    )`);
+    console.log('Create table product');
+    // const update = await connection.query(`UPDATE product SET nama=$1 WHERE id=$2`, ['Baju Putih', 1]);
+    // console.log('Update product ', update.rows);
+
+    // const del = await connection.query(`DELETE FROM product WHERE id=$1`, [1]);
+    // console.log('Delete product ', del.rows);
+
+    // const count = await connection.query(`SELECT COUNT(*) FROM product`);
+    // console.log('Count product ', count.rows);
+}
+
+const dropTable = async() => {
+    await connection.query(`DROP TABLE product`);
+    connection.end();
+    console.log('Drop table product');
+}
+
+const saveProduct = (product) => {
+    connection.query(`INSERT INTO product 
+        (nama, qty, images, description, price)
+        VALUES
+        ($1, $2, $3, $4, $5)
+    `, [product.name, product.stock, JSON.stringify(product.images), product.desc, product.price]);
+    console.log('Save product: ' + product.name);
+}
+
+const getProducts = async() => {
     const connect = await connection.connect();
-    try {
-        await connect.query('BEGIN');
-        const create = await connection.query(`CREATE TABLE IF NOT EXISTS product (
-            id serial PRIMARY KEY, 
-            nama VARCHAR(100) NOT NULL,
-            qty INTEGER,
-            images TEXT,
-            description TEXT,
-            price decimal(11,2)
-        )`);
-        console.log('Create table product ', create.rows);
-
-        const insert = await connection.query(`INSERT INTO product 
-            (nama, qty, images, description, price)
-            VALUES
-            ($1, $2, $3, $4, $5)
-        `, ['Baju', 2, JSON.stringify(["image01", "image02"]), 'Keterangan product', 350000]);
-        console.log('Insert product ', insert.rows);
-
-        const update = await connection.query(`UPDATE product SET nama=$1 WHERE id=$2`, ['Baju Putih', 1]);
-        console.log('Update product ', update.rows);
-
-        const select = await connection.query(`SELECT * FROM product`);
-        console.log('Select product ', select.rows);
-
-        const del = await connection.query(`DELETE FROM product WHERE id=$1`, [1]);
-        console.log('Delete product ', del.rows);
-
-        const count = await connection.query(`SELECT COUNT(*) FROM product`);
-        console.log('Count product ', count.rows);
-
-        const drop = await connection.query(`DROP TABLE product`);
-        console.log('Drop table product ', drop.rows);
-        await connect.query('COMMIT');
-    } catch (error) {
-        await connect.query('ROLLBACK');
-        throw error;
-    } finally {
-        connect.release();
-    }
+    const select = await connect.query(`SELECT nama FROM product`);
+    console.log(select.rows);
 }
 
 const getList = async(page) => {
@@ -72,7 +69,7 @@ const getList = async(page) => {
             return;
         }
         const products = result.Products.product;
-        process.stdout.write('Collecting data from elevenia.co.id');
+        console.log('Collecting data from elevenia.co.id...');
         for (let index = 0; index < products.length; index++) {
             const product = products[index];
             const { res, payload } = await Wreck.get(hostApi + '/rest/prodservices/product/details/' + product.prdNo, options);
@@ -85,11 +82,10 @@ const getList = async(page) => {
                 desc: productDetail.Product.htmlDetail,
                 price: productDetail.Product.selPrc
             };
-            process.stdout.write(index % 5 == 0 ? '. ' : '');
-            // console.log(formatted);
             // Save in database
+            saveProduct(formatted);
         }
-        process.stdout.write("\nComplete\n");
+        console.log(":::::::::::::::::: Complete ::::::::::::::::::");
     } catch (error) {
         console.log(error);
     }
@@ -108,6 +104,11 @@ const getImages = (product) => {
 }
 
 const init = async() => {
+    await migrateDb();
+    await getList(1);
+    await getProducts();
+    await dropTable();
+
     const server = Hapi.server({
         port: 3000,
         host: 'localhost'
@@ -130,7 +131,4 @@ process.on('unhandledRejection', (err) => {
     process.exit(1);
 });
 
-const list = getList(1);
-list.then((result) => {
-    connectDb().then((result) => init()).catch(e => console.error(e.stack));
-});
+init();
