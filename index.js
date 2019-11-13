@@ -148,7 +148,10 @@ const getImages = (product) => {
 
 const init = async() => {
     await migrateDb();
-    await getList(1);
+    const checkProducts = await getProducts();
+    if (checkProducts.length === 0) {
+        await getList(1);
+    }
 
     const server = Hapi.server({
         port: 3000,
