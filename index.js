@@ -3,11 +3,63 @@
 const Hapi = require('@hapi/hapi');
 const Wreck = require('@hapi/wreck');
 const parser = require('xml2json-light');
-const fetch = require('node-fetch');
+const Pool = require('pg').Pool;
+const connection = new Pool({
+    user: 'postgres',
+    host: 'localhost',
+    database: 'project',
+    password: 'password',
+    port: 5432,
+});
 
 const openapikey = '721407f393e84a28593374cc2b347a98';
 const options = { headers: { 'openapikey': openapikey } };
 const hostApi = 'https://api.elevenia.co.id';
+
+const connectDb = async() => {
+    const connect = await connection.connect();
+    try {
+        await connect.query('BEGIN');
+        const create = await connection.query(`CREATE TABLE product (
+            id serial PRIMARY KEY, 
+            nama VARCHAR(100) NOT NULL,
+            qty INTEGER,
+            images TEXT,
+            description TEXT,
+            price decimal(11,2)
+        )`);
+        console.log('Create table product ', create.rows);
+
+        const insert = await connection.query(`INSERT INTO product 
+            (nama, qty, images, description, price)
+            VALUES
+            ($1, $2, $3, $4, $5)
+        `, ['Baju', 2, JSON.stringify(["image01", "image02"]), 'Keterangan product', 350000]);
+        console.log('Insert product ', insert.rows);
+
+        const update = await connection.query(`UPDATE product SET nama=$1 WHERE id=$2`, ['Baju Putih', 1]);
+        console.log('Update product ', update.rows);
+
+        const select = await connection.query(`SELECT * FROM product`);
+        console.log('Select product ', select.rows);
+
+        const del = await connection.query(`DELETE FROM product WHERE id=$1`, [1]);
+        console.log('Delete product ', del.rows);
+
+        const count = await connection.query(`SELECT COUNT(*) FROM product`);
+        console.log('Count product ', count.rows);
+
+        const drop = await connection.query(`DROP TABLE product`);
+        console.log('Drop table product ', drop.rows);
+        await connect.query('COMMIT');
+    } catch (error) {
+        await connect.query('ROLLBACK');
+        throw error;
+    } finally {
+        connect.release();
+    }
+    await connection.end();
+}
 
 const getList = async(page) => {
     try {
@@ -80,6 +132,6 @@ process.on('unhandledRejection', (err) => {
 });
 
 const list = getList(1);
-list.then(function(value) {
-    init();
+list.then((result) => {
+    connectDb().then((result) => init()).catch(e => console.error(e.stack));
 });
