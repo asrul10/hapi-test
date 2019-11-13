@@ -2,6 +2,7 @@
 
 const Hapi = require('@hapi/hapi');
 const Wreck = require('@hapi/wreck');
+const Path = require('path');
 const parser = require('xml2json-light');
 const { Pool } = require('pg');
 const connection = new Pool({
@@ -155,14 +156,29 @@ const init = async() => {
 
     const server = Hapi.server({
         port: 3000,
-        host: 'localhost'
+        host: 'localhost',
+        routes: {
+            files: {
+                relativeTo: Path.join(__dirname, 'public')
+            }
+        }
     });
+
+    await server.register(require('inert'));
 
     server.route({
         method: 'GET',
         path: '/',
         handler: (request, h) => {
-            return 'Hello World!';
+            return h.file('index.html');
+        }
+    });
+
+    server.route({
+        method: 'GET',
+        path: '/dist/main.js',
+        handler: (request, h) => {
+            return h.file('dist/main.js');
         }
     });
 
