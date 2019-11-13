@@ -3,7 +3,7 @@
 const Hapi = require('@hapi/hapi');
 const Wreck = require('@hapi/wreck');
 const parser = require('xml2json-light');
-const Pool = require('pg').Pool;
+const { Pool } = require('pg');
 const connection = new Pool({
     user: 'postgres',
     host: 'localhost',
@@ -20,7 +20,7 @@ const connectDb = async() => {
     const connect = await connection.connect();
     try {
         await connect.query('BEGIN');
-        const create = await connection.query(`CREATE TABLE product (
+        const create = await connection.query(`CREATE TABLE IF NOT EXISTS product (
             id serial PRIMARY KEY, 
             nama VARCHAR(100) NOT NULL,
             qty INTEGER,
@@ -58,7 +58,6 @@ const connectDb = async() => {
     } finally {
         connect.release();
     }
-    await connection.end();
 }
 
 const getList = async(page) => {
