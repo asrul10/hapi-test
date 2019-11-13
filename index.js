@@ -17,41 +17,61 @@ const options = { headers: { 'openapikey': openapikey } };
 const hostApi = 'https://api.elevenia.co.id';
 
 const migrateDb = async() => {
-    await connection.query(`CREATE TABLE IF NOT EXISTS product (
-        id serial PRIMARY KEY, 
-        nama VARCHAR(100) NOT NULL,
-        qty INTEGER,
-        images TEXT,
-        description TEXT,
-        price decimal(11,2)
-    )`);
-    console.log('Create table product');
+    try {
+        await connection.query(`CREATE TABLE IF NOT EXISTS product (
+            id serial PRIMARY KEY, 
+            nama VARCHAR(100) NOT NULL,
+            qty INTEGER,
+            images TEXT,
+            description TEXT,
+            price decimal(11,2)
+        )`);
+        console.log('Table created!');
+    } catch (error) {
+        console.log(error);
+    }
 }
 
 const clearProducts = async() => {
-    await connection.query(`DELETE FROM product`);
-    console.log('Delete Product');
+    try {
+        await connection.query(`DELETE FROM product`);
+        console.log('All product cleared');
+    } catch (error) {
+        console.log(error);
+    }
 }
 
 const saveProduct = (product) => {
-    connection.query(`INSERT INTO product 
-        (id, nama, qty, images, description, price)
-        VALUES
-        ($1, $2, $3, $4, $5, $6)
-    `, [product.no, product.name, product.stock, JSON.stringify(product.images), product.desc, product.price]);
-    console.log('Save Product: ' + product.name);
+    try {
+        connection.query(`INSERT INTO product 
+            (id, nama, qty, images, description, price)
+            VALUES
+            ($1, $2, $3, $4, $5, $6)
+        `, [product.no, product.name, product.stock, JSON.stringify(product.images), product.desc, product.price]);
+        console.log('Product saved: ' + product.name);
+    } catch (error) {
+        console.log(error);
+    }
 }
 
 const getProducts = async() => {
-    const result = await connection.query(`SELECT * FROM product`);
-    console.log('Get Products');
-    return result.rows;
+    try {
+        const result = await connection.query(`SELECT * FROM product`);
+        console.log('Get Products');
+        return result.rows;
+    } catch (error) {
+        console.log(error);
+    }
 }
 
 const getProduct = async(id) => {
-    const result = await connection.query(`SELECT * FROM product WHERE id = $1`, [id]);
-    console.log('Get Product');
-    return result.rows;
+    try {
+        const result = await connection.query(`SELECT * FROM product WHERE id = $1`, [id]);
+        console.log('Get Product');
+        return result.rows;
+    } catch (error) {
+        console.log(error);
+    }
 }
 
 const updateProduct = async(id, data) => {
@@ -71,9 +91,13 @@ const updateProduct = async(id, data) => {
 }
 
 const deleteProduct = async(id) => {
-    const result = await connection.query(`DELETE FROM product WHERE id = $1`, [id]);
-    console.log('Delete Product');
-    return result.rows;
+    try {
+        const result = await connection.query(`DELETE FROM product WHERE id = $1`, [id]);
+        console.log('Delete Product');
+        return result.rows;
+    } catch (error) {
+        console.log(error);
+    }
 }
 
 const getList = async(page) => {
