@@ -36,10 +36,9 @@ const migrateDb = async() => {
     // console.log('Count product ', count.rows);
 }
 
-const dropTable = async() => {
-    await connection.query(`DROP TABLE product`);
-    connection.end();
-    console.log('Drop table product');
+const deleteProduct = async() => {
+    await connection.query(`DELETE FROM product`);
+    console.log('Delete Product');
 }
 
 const saveProduct = (product) => {
@@ -48,13 +47,14 @@ const saveProduct = (product) => {
         VALUES
         ($1, $2, $3, $4, $5)
     `, [product.name, product.stock, JSON.stringify(product.images), product.desc, product.price]);
-    console.log('Save product: ' + product.name);
+    console.log('Save Product: ' + product.name);
 }
 
 const getProducts = async() => {
     const connect = await connection.connect();
-    const select = await connect.query(`SELECT nama FROM product`);
-    console.log(select.rows);
+    const select = await connect.query(`SELECT * FROM product`);
+    console.log('Get Products');
+    return select.rows;
 }
 
 const getList = async(page) => {
@@ -106,8 +106,6 @@ const getImages = (product) => {
 const init = async() => {
     await migrateDb();
     await getList(1);
-    await getProducts();
-    await dropTable();
 
     const server = Hapi.server({
         port: 3000,
@@ -119,6 +117,24 @@ const init = async() => {
         path: '/',
         handler: (request, h) => {
             return 'Hello World!';
+        }
+    });
+
+    server.route({
+        method: 'GET',
+        path: '/list-products',
+        handler: async(request, h) => {
+            const products = await getProducts();
+            return products;
+        }
+    });
+
+    server.route({
+        method: 'GET',
+        path: '/clear-products',
+        handler: async(request, h) => {
+            await deleteProduct();
+            return 'Products Cleared!';
         }
     });
 
