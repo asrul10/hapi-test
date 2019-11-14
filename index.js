@@ -82,12 +82,13 @@ const getProduct = async(id) => {
 
 const updateProduct = async(id, data) => {
     try {
-        const result = await connection.query(`UPDATE product SET nama=$2, qty=$3, description=$4, price=$5 WHERE id=$1`, [
+        const result = await connection.query(`UPDATE product SET nama=$2, qty=$3, description=$4, price=$5, images=$6 WHERE id=$1`, [
             id,
             data.nama,
             data.qty,
             data.description,
-            data.price
+            data.price,
+            data.images
         ]);
         console.log('Update Product');
         return result.rows;
@@ -213,6 +214,7 @@ const init = async() => {
             const data = {
                 nama: payload.nama,
                 qty: parseInt(payload.qty),
+                images: payload.images,
                 description: payload.description,
                 price: parseFloat(payload.price)
             }
@@ -232,18 +234,6 @@ const init = async() => {
         path: '/delete-product/{id}',
         handler: async(request, h) => {
             const product = await deleteProduct(request.params.id);
-            return {
-                status: true,
-                message: `Product id: ${request.params.id} berhasil dihapus!`
-            };
-        }
-    });
-
-    server.route({
-        method: 'POST',
-        path: '/update-product/{id}',
-        handler: async(request, h) => {
-            await deleteProduct(request.params.id);
             return {
                 status: true,
                 message: `Product id: ${request.params.id} berhasil dihapus!`

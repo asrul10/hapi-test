@@ -23,6 +23,7 @@ class Products {
         let formData = new FormData();
         formData.append('nama', product.nama);
         formData.append('qty', product.qty);
+        formData.append('images', JSON.stringify(product.images));
         formData.append('description', product.description);
         formData.append('price', product.price);
 
@@ -57,6 +58,10 @@ class Products {
 
     onChangeProduct(e, product, attr) {
         const index = this.getIndexProduct(product);
+        if (attr === 'images') {
+            this.products[index][attr][0] = e.target.value;
+            return;
+        }
         this.products[index][attr] = e.target.value;
     }
 }
@@ -103,8 +108,12 @@ const ProductsList = observer(({ products }) => (
                                 <input className="form-input" type="number" placeholder="Harga" value={item.price} onChange={e => products.onChangeProduct(e, item, 'price')} />
                             </div>
                             <div className="form-group">
+                                <label className="form-label">Images Link</label>
+                                <textarea class="form-input" placeholder="Images" rows="3" value={item.images[0]} onChange={e => products.onChangeProduct(e, item, 'images')} />
+                            </div>
+                            <div className="form-group">
                                 <label className="form-label">Description</label>
-                                <textarea class="form-input" placeholder="Textarea" rows="3" value={item.description} onChange={e => products.onChangeProduct(e, item, 'description')} />
+                                <textarea class="form-input" placeholder="Description" rows="3" value={item.description} onChange={e => products.onChangeProduct(e, item, 'description')} />
                             </div>
                         </form>
                     </div>
