@@ -59,7 +59,10 @@ const getProducts = async() => {
     try {
         const result = await connection.query(`SELECT * FROM product`);
         console.log('Get Products');
-        return result.rows;
+        return result.rows.map(item => {
+            item.images = JSON.parse(item.images);
+            return item;
+        });
     } catch (error) {
         console.log(error);
     }
