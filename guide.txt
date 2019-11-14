@@ -1,0 +1,16 @@
+Frontend: 
+    - React.js
+    - MobX (https://mobx.js.org/) https://codesandbox.io/s/minimal-mobx-react-project-8xk42
+Backend: 
+    - Hapi.js (https://hapijs.com/)
+Database: 
+    - Postgresql
+
+# Get product and save in database:
+- Nama
+- SKU
+- Gambar
+- Description
+- Harga
+# Show in card layout
+# Product can be edit and delete
