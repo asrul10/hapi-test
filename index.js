@@ -214,11 +214,14 @@ const init = async() => {
                 description: payload.description,
                 price: parseFloat(payload.price)
             }
-            if (data.nama && data.qty && data.description && data.price) {
-                const product = await updateProduct(request.params.id, data);
-                return [data];
+            for (let index = 0; index < data.length; index++) {
+                const element = data[index];
+                if (typeof element === 'undefined') {
+                    return { status: false, message: 'Input tidak valid', data: data };
+                }
             }
-            return { status: false, message: 'Input tidak valid' };
+            const product = await updateProduct(request.params.id, data);
+            return [data];
         }
     });
 
