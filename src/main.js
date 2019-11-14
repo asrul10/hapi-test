@@ -89,7 +89,8 @@ const ProductsList = observer(({ products }) => (
                     </div>
                     <div className="card-body">
                         <h4>Rp{item.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")}</h4>
-                        <div style={{ height: '200px', overflowY: 'scroll' }} dangerouslySetInnerHTML={{ __html: (new DOMParser).parseFromString(item.description, 'text/html').body.textContent }} />
+                        <div class="divider"></div>
+                        <div style={{ height: '200px', overflowY: 'scroll' }} dangerouslySetInnerHTML={{ __html: item.description }} />
                     </div>
                     <div class="divider"></div>
                     <div className="card-body">

@@ -4,7 +4,10 @@ const Hapi = require('@hapi/hapi');
 const Wreck = require('@hapi/wreck');
 const Path = require('path');
 const parser = require('xml2json-light');
+const Entities = require('html-entities').AllHtmlEntities;
 const { Pool } = require('pg');
+
+const entities = new Entities();
 const connection = new Pool({
     user: 'postgres',
     host: 'localhost',
@@ -63,6 +66,7 @@ const getProducts = async() => {
             item.images = JSON.parse(item.images);
             item.price = item.price.toString();
             item.price = item.price.replace(/\.00/, '');
+            item.description = entities.decode(item.description);
             return item;
         });
     } catch (error) {
@@ -86,7 +90,7 @@ const updateProduct = async(id, data) => {
             id,
             data.nama,
             data.qty,
-            data.description,
+            entities.decode(data.description),
             data.price,
             data.images
         ]);

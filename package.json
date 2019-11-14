@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "@hapi/hapi": "^18.4.0",
+    "html-entities": "^1.2.1",
     "inert": "^5.1.3",
     "node-fetch": "^2.6.0",
     "pg": "^7.12.1",
