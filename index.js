@@ -57,10 +57,12 @@ const saveProduct = (product) => {
 
 const getProducts = async() => {
     try {
-        const result = await connection.query(`SELECT * FROM product`);
+        const result = await connection.query(`SELECT * FROM product ORDER BY ID`);
         console.log('Get Products');
         return result.rows.map(item => {
             item.images = JSON.parse(item.images);
+            item.price = item.price.toString();
+            item.price = item.price.replace(/\.00/, '');
             return item;
         });
     } catch (error) {
